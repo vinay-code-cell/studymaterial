@@ -1,17 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, Download, FileText, Upload } from 'lucide-react';
-import { getMaterials, logAccess, uploadMaterial } from '../lib/api';
+import { Search, Download, FileText } from 'lucide-react';
+import { getMaterials, logAccess } from '../lib/api';
 import type { Material } from '../lib/supabase';
 
 export default function Dashboard() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showUploadForm, setShowUploadForm] = useState(false);
-  const [uploadTitle, setUploadTitle] = useState('');
-  const [uploadDescription, setUploadDescription] = useState('');
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadMaterials();
@@ -43,26 +38,6 @@ export default function Dashboard() {
     }
   }
 
-  async function handleUpload(e: React.FormEvent) {
-    e.preventDefault();
-    if (!uploadFile || !uploadTitle.trim()) return;
-
-    try {
-      setUploading(true);
-      await uploadMaterial(uploadTitle, uploadDescription, uploadFile);
-      setUploadTitle('');
-      setUploadDescription('');
-      setUploadFile(null);
-      setShowUploadForm(false);
-      alert('Material submitted successfully! It will appear after admin approval.');
-    } catch (error) {
-      console.error('Error uploading:', error);
-      alert('Error uploading material. Please try again.');
-    } finally {
-      setUploading(false);
-    }
-  }
-
   function formatFileSize(bytes: number) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -89,108 +64,24 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="flex gap-4 mb-8 flex-col sm:flex-row sm:justify-between sm:items-end">
-          <form onSubmit={handleSearch} className="flex-1">
-            <div className="relative max-w-2xl">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search by title or keyword..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Search
-              </button>
-            </div>
-          </form>
-          <button
-            onClick={() => setShowUploadForm(!showUploadForm)}
-            className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap"
-          >
-            <Upload className="w-4 h-4" />
-            Submit Material
-          </button>
-        </div>
-
-        {showUploadForm && (
-          <div className="mb-8 bg-white rounded-lg shadow-md p-6 max-w-2xl">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">Submit Study Material</h2>
-            <form onSubmit={handleUpload} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  value={uploadTitle}
-                  onChange={(e) => setUploadTitle(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Physics Chapter 1 Notes"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={uploadDescription}
-                  onChange={(e) => setUploadDescription(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Brief description of the material..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  PDF File *
-                </label>
-                <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center">
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                    required
-                    className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {uploadFile && (
-                    <p className="mt-2 text-sm text-slate-600">
-                      Selected: {uploadFile.name}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={uploading || !uploadFile || !uploadTitle.trim()}
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
-                >
-                  {uploading ? 'Submitting...' : 'Submit for Approval'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowUploadForm(false)}
-                  className="bg-slate-300 text-slate-700 px-6 py-2 rounded-lg font-medium hover:bg-slate-400 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-
-              <p className="text-xs text-slate-500 mt-4">
-                Note: Submitted materials will be reviewed by an admin before appearing on the dashboard.
-              </p>
-            </form>
+        <form onSubmit={handleSearch} className="mb-8">
+          <div className="relative max-w-2xl">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search by title or keyword..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+            />
+            <button
+              type="submit"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Search
+            </button>
           </div>
-        )}
+        </form>
 
         {loading ? (
           <div className="text-center py-12">

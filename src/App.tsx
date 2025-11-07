@@ -1,38 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { BookOpen, Shield } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import AdminPanel from './components/AdminPanel';
-import AdminLogin from './components/AdminLogin';
-import { isAdminLoggedIn, initializeAdminAccount } from './lib/auth';
 
 function App() {
   const [view, setView] = useState<'dashboard' | 'admin'>('dashboard');
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
-
-  useEffect(() => {
-    initializeAdminAccount();
-    setAdminLoggedIn(isAdminLoggedIn());
-  }, []);
-
-  function handleAdminNavigation() {
-    if (isAdminLoggedIn()) {
-      setView('admin');
-    } else {
-      setView('admin');
-    }
-  }
-
-  function handleAdminLogout() {
-    setAdminLoggedIn(false);
-    setView('dashboard');
-  }
-
-  if (adminLoggedIn === false && view === 'admin' && !isAdminLoggedIn()) {
-    return <AdminLogin onLoginSuccess={() => {
-      setAdminLoggedIn(true);
-      setView('admin');
-    }} />;
-  }
 
   return (
     <div className="min-h-screen">
@@ -55,7 +27,7 @@ function App() {
                 Dashboard
               </button>
               <button
-                onClick={handleAdminNavigation}
+                onClick={() => setView('admin')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                   view === 'admin'
                     ? 'bg-blue-600 text-white'
@@ -70,13 +42,7 @@ function App() {
         </div>
       </nav>
 
-      {view === 'dashboard' ? (
-        <Dashboard />
-      ) : isAdminLoggedIn() ? (
-        <AdminPanel onLogout={handleAdminLogout} />
-      ) : (
-        <AdminLogin onLoginSuccess={() => setAdminLoggedIn(true)} />
-      )}
+      {view === 'dashboard' ? <Dashboard /> : <AdminPanel />}
     </div>
   );
 }
