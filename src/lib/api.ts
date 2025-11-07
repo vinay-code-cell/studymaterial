@@ -4,6 +4,7 @@ export async function getMaterials(searchQuery = '') {
   let query = supabase
     .from('materials')
     .select('*')
+    .eq('status', 'approved')
     .order('upload_date', { ascending: false });
 
   if (searchQuery) {
@@ -11,6 +12,27 @@ export async function getMaterials(searchQuery = '') {
   }
 
   const { data, error } = await query;
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getPendingMaterials() {
+  const { data, error } = await supabase
+    .from('materials')
+    .select('*')
+    .eq('status', 'pending')
+    .order('upload_date', { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getAllMaterials() {
+  const { data, error } = await supabase
+    .from('materials')
+    .select('*')
+    .order('upload_date', { ascending: false });
 
   if (error) throw error;
   return data;
@@ -43,12 +65,35 @@ export async function uploadMaterial(
       file_url: urlData.publicUrl,
       file_name: file.name,
       file_size: file.size,
+      status: 'pending',
     })
     .select()
     .single();
 
   if (error) throw error;
   return data;
+}
+
+export async function approveMaterial(id: string, adminId: string) {
+  const { error } = await supabase
+    .from('materials')
+    .update({
+      status: 'approved',
+      approved_by: adminId,
+      approval_date: new Date().toISOString(),
+    })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function rejectMaterial(id: string) {
+  const { error } = await supabase
+    .from('materials')
+    .update({ status: 'rejected' })
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 export async function logAccess(materialId: string, fileName: string) {
